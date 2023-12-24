@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "id": "modmenu",
+  "name": "Mod Menu",
+  "version": "${version}",
+  "mixins": ["mixins.modmenu.json"],
+  "description": "Adds a mod menu to view the list of mods you have installed.",
+  "icon": "assets/modmenu/icon.png",
+  "entryPoints": {
+    "main": "com.terraformersmc.modmenu.ModMenu",
+    "modmenu": "com.terraformersmc.modmenu.ModMenuModMenuCompat"
+  }
+}

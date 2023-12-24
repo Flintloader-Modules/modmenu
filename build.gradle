@@ -1,29 +1,22 @@
 plugins {
-	id 'fabric-loom' version '1.1-SNAPSHOT'
-}
-
-apply from: 'https://raw.githubusercontent.com/TerraformersMC/GradleScripts/2.5+no-cf/ferry.gradle'
-
-dependencies {
-	minecraft "com.mojang:minecraft:$project.minecraft_version"
-	mappings "net.fabricmc:yarn:$project.yarn_mappings:v2"
-
-	mod "fabric-loader", "net.fabricmc:fabric-loader:$project.loader_version"
-	includeMod "fabric-api", fabricApi.module("fabric-api-base", project.fabric_version)
-	includeMod "fabric-api", fabricApi.module("fabric-resource-loader-v0", project.fabric_version)
-	includeMod "fabric-api", fabricApi.module("fabric-screen-api-v1", project.fabric_version)
-	includeMod "fabric-api", fabricApi.module("fabric-key-binding-api-v1", project.fabric_version)
-	includeMod "fabric-api", fabricApi.module("fabric-lifecycle-events-v1", project.fabric_version)
-	compileOnly "org.quiltmc:quilt-loader:$project.quilt_loader_version"
+	id 'flint-steel' version '0.1.1'
 }
 
 repositories {
+	mavenCentral()
 	maven {
-		name = 'TerraformersMC'
-		url = 'https://maven.terraformersmc.com/'
+		url = "https://maven.flintloader.net/releases"
+		name = "Flint Releases"
 	}
 	maven {
-		name = 'Quilt'
-		url = 'https://maven.quiltmc.org/repository/release'
+		url = "https://maven.flintloader.net/mirror"
+		name = "Flint Mirror"
 	}
+}
+
+dependencies {
+	minecraft "com.mojang:minecraft:$project.minecraft_version"
+	mappings steel.officialMojangMappings()
+	modImplementation "net.flintloader:punch:0.0.4"
+	modImplementation "net.flintloader:flint-api:1.20.4-0.0.0"
 }

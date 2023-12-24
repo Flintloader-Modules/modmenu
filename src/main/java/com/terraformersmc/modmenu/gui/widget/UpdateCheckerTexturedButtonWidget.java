@@ -3,21 +3,20 @@ package com.terraformersmc.modmenu.gui.widget;
 
 import com.terraformersmc.modmenu.ModMenu;
 import com.terraformersmc.modmenu.config.ModMenuConfig;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.TexturedButtonWidget;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.ImageButton;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 
-public class UpdateCheckerTexturedButtonWidget extends TexturedButtonWidget {
-	public UpdateCheckerTexturedButtonWidget(int x, int y, int width, int height, int u, int v, int hoveredVOffset, Identifier texture, int textureWidth, int textureHeight, ButtonWidget.PressAction pressAction, Text message) {
+public class UpdateCheckerTexturedButtonWidget extends LegacyTexturedButtonWidget {
+	public UpdateCheckerTexturedButtonWidget(int x, int y, int width, int height, int u, int v, int hoveredVOffset, ResourceLocation texture, int textureWidth, int textureHeight, Button.OnPress pressAction, Component message) {
 		super(x, y, width, height, u, v, hoveredVOffset, texture, textureWidth, textureHeight, pressAction, message);
 	}
 
 	@Override
-	public void renderButton(DrawContext DrawContext, int mouseX, int mouseY, float delta) {
-		super.renderButton(DrawContext, mouseX, mouseY, delta);
+	public void renderWidget(GuiGraphics DrawContext, int mouseX, int mouseY, float delta) {
+		super.renderWidget(DrawContext, mouseX, mouseY, delta);
 		if (ModMenuConfig.BUTTON_UPDATE_BADGE.getValue() && ModMenu.modUpdateAvailable) {
 			UpdateAvailableBadge.renderBadge(DrawContext, this.getX() + this.width - 5, this.getY() - 3);
 		}

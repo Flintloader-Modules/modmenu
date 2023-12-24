@@ -6,12 +6,11 @@ import com.terraformersmc.modmenu.config.ModMenuConfig;
 import com.terraformersmc.modmenu.gui.widget.ModListWidget;
 import com.terraformersmc.modmenu.util.mod.Mod;
 import com.terraformersmc.modmenu.util.mod.ModSearch;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.Util;
+import net.minecraft.Util;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.Arrays;
@@ -19,7 +18,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class ParentEntry extends ModListEntry {
-	private static final Identifier PARENT_MOD_TEXTURE = new Identifier(ModMenu.MOD_ID, "textures/gui/parent_mod.png");
+	private static final ResourceLocation PARENT_MOD_TEXTURE = new ResourceLocation(ModMenu.MOD_ID, "textures/gui/parent_mod.png");
 	protected List<Mod> children;
 	protected ModListWidget list;
 	protected boolean hoveringIcon = false;
@@ -31,14 +30,14 @@ public class ParentEntry extends ModListEntry {
 	}
 
 	@Override
-	public void render(DrawContext DrawContext, int index, int y, int x, int rowWidth, int rowHeight, int mouseX, int mouseY, boolean isSelected, float delta) {
+	public void render(GuiGraphics DrawContext, int index, int y, int x, int rowWidth, int rowHeight, int mouseX, int mouseY, boolean isSelected, float delta) {
 		super.render(DrawContext, index, y, x, rowWidth, rowHeight, mouseX, mouseY, isSelected, delta);
-		TextRenderer font = client.textRenderer;
-		int childrenBadgeHeight = font.fontHeight;
-		int childrenBadgeWidth = font.fontHeight;
+		Font font = client.font;
+		int childrenBadgeHeight = font.lineHeight;
+		int childrenBadgeWidth = font.lineHeight;
 		int shownChildren = ModSearch.search(list.getParent(), list.getParent().getSearchInput(), getChildren()).size();
-		Text str = shownChildren == children.size() ? Text.literal(String.valueOf(shownChildren)) : Text.literal(shownChildren + "/" + children.size());
-		int childrenWidth = font.getWidth(str) - 1;
+		Component str = shownChildren == children.size() ? Component.literal(String.valueOf(shownChildren)) : Component.literal(shownChildren + "/" + children.size());
+		int childrenWidth = font.width(str) - 1;
 		if (childrenBadgeWidth < childrenWidth + 4) {
 			childrenBadgeWidth = childrenWidth + 4;
 		}
@@ -52,14 +51,14 @@ public class ParentEntry extends ModListEntry {
 		DrawContext.fill( childrenBadgeX + childrenBadgeWidth - 1, childrenBadgeY + 1, childrenBadgeX + childrenBadgeWidth, childrenBadgeY + childrenBadgeHeight - 1, childrenOutlineColor);
 		DrawContext.fill( childrenBadgeX + 1, childrenBadgeY + 1, childrenBadgeX + childrenBadgeWidth - 1, childrenBadgeY + childrenBadgeHeight - 1, childrenFillColor);
 		DrawContext.fill( childrenBadgeX + 1, childrenBadgeY + childrenBadgeHeight - 1, childrenBadgeX + childrenBadgeWidth - 1, childrenBadgeY + childrenBadgeHeight, childrenOutlineColor);
-		DrawContext.drawText(font, str.asOrderedText(), (int) (childrenBadgeX + (float) childrenBadgeWidth / 2 - (float) childrenWidth / 2), childrenBadgeY + 1, 0xCACACA, false);
+		DrawContext.drawString(font, str.getVisualOrderText(), (int) (childrenBadgeX + (float) childrenBadgeWidth / 2 - (float) childrenWidth / 2), childrenBadgeY + 1, 0xCACACA, false);
 		this.hoveringIcon = mouseX >= x - 1 && mouseX <= x - 1 + iconSize && mouseY >= y - 1 && mouseY <= y - 1 + iconSize;
 		if (isMouseOver(mouseX, mouseY)) {
 			DrawContext.fill(x, y, x + iconSize, y + iconSize, 0xA0909090);
 			int xOffset = list.getParent().showModChildren.contains(getMod().getId()) ? iconSize : 0;
 			int yOffset = hoveringIcon ? iconSize : 0;
 			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-			DrawContext.drawTexture(PARENT_MOD_TEXTURE, x, y, xOffset, yOffset, iconSize + xOffset, iconSize + yOffset, ModMenuConfig.COMPACT_LIST.getValue() ? (int) (256 / (FULL_ICON_SIZE / (double) COMPACT_ICON_SIZE)) : 256, ModMenuConfig.COMPACT_LIST.getValue() ? (int) (256 / (FULL_ICON_SIZE / (double) COMPACT_ICON_SIZE)) : 256);
+			DrawContext.blit(PARENT_MOD_TEXTURE, x, y, xOffset, yOffset, iconSize + xOffset, iconSize + yOffset, ModMenuConfig.COMPACT_LIST.getValue() ? (int) (256 / (FULL_ICON_SIZE / (double) COMPACT_ICON_SIZE)) : 256, ModMenuConfig.COMPACT_LIST.getValue() ? (int) (256 / (FULL_ICON_SIZE / (double) COMPACT_ICON_SIZE)) : 256);
 		}
 	}
 
@@ -69,11 +68,11 @@ public class ParentEntry extends ModListEntry {
 		if (mouseX - list.getRowLeft() <= iconSize) {
 			this.toggleChildren();
 			return true;
-		} else if (Util.getMeasuringTimeMs() - this.sinceLastClick < 250) {
+		} else if (Util.getMillis() - this.sinceLastClick < 250) {
 			this.toggleChildren();
 			return true;
 		} else {
-			this.sinceLastClick = Util.getMeasuringTimeMs();
+			this.sinceLastClick = Util.getMillis();
 			return super.mouseClicked(mouseX, mouseY, i);
 		}
 	}

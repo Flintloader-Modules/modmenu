@@ -2,7 +2,7 @@ package com.terraformersmc.modmenu.util.mod;
 
 import com.terraformersmc.modmenu.ModMenu;
 import com.terraformersmc.modmenu.gui.ModsScreen;
-import net.minecraft.client.resource.language.I18n;
+import net.minecraft.client.resources.language.I18n;
 
 import java.util.List;
 import java.util.Locale;
@@ -31,12 +31,12 @@ public class ModSearch {
 		String modTranslatedDescription = mod.getTranslatedDescription();
 		String modSummary = mod.getSummary();
 
-		String library = I18n.translate("modmenu.searchTerms.library");
-		String patchwork = I18n.translate("modmenu.searchTerms.patchwork");
-		String modpack = I18n.translate("modmenu.searchTerms.modpack");
-		String deprecated = I18n.translate("modmenu.searchTerms.deprecated");
-		String clientside = I18n.translate("modmenu.searchTerms.clientside");
-		String configurable = I18n.translate("modmenu.searchTerms.configurable");
+		String library = I18n.get("modmenu.searchTerms.library");
+		String patchwork = I18n.get("modmenu.searchTerms.patchwork");
+		String modpack = I18n.get("modmenu.searchTerms.modpack");
+		String deprecated = I18n.get("modmenu.searchTerms.deprecated");
+		String clientside = I18n.get("modmenu.searchTerms.clientside");
+		String configurable = I18n.get("modmenu.searchTerms.configurable");
 
 		// Some basic search, could do with something more advanced but this will do for now
 		if (modName.toLowerCase(Locale.ROOT).contains(query) // Search default mod name

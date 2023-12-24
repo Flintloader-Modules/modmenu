@@ -1,8 +1,9 @@
 package com.terraformersmc.modmenu.util.mod.fabric;
 
-import net.fabricmc.loader.api.ModContainer;
-import net.minecraft.client.texture.NativeImage;
-import net.minecraft.client.texture.NativeImageBackedTexture;
+import com.mojang.blaze3d.platform.NativeImage;
+import net.flintloader.loader.api.FlintModuleContainer;
+import net.flintloader.loader.modules.FlintModuleMetadata;
+import net.minecraft.client.renderer.texture.DynamicTexture;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,16 +15,21 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 public class FabricIconHandler implements Closeable {
 	private static final Logger LOGGER = LoggerFactory.getLogger("Mod Menu | FabricIconHandler");
 
-	private final Map<Path, NativeImageBackedTexture> modIconCache = new HashMap<>();
+	private final Map<Path, DynamicTexture> modIconCache = new HashMap<>();
 
-	public NativeImageBackedTexture createIcon(ModContainer iconSource, String iconPath) {
+	public DynamicTexture createIcon(FlintModuleContainer iconSource, String iconPath) {
 		try {
-			Path path = iconSource.getPath(iconPath);
-			NativeImageBackedTexture cachedIcon = getCachedModIcon(path);
+			Optional<Path> icn = iconSource.findPath(iconPath);
+			if (icn.isEmpty())
+				return null;
+
+			Path path = icn.get();
+			DynamicTexture cachedIcon = getCachedModIcon(path);
 			if (cachedIcon != null) {
 				return cachedIcon;
 			}
@@ -34,7 +40,7 @@ public class FabricIconHandler implements Closeable {
 			try (InputStream inputStream = Files.newInputStream(path)) {
 				NativeImage image = NativeImage.read(Objects.requireNonNull(inputStream));
 				Validate.validState(image.getHeight() == image.getWidth(), "Must be square icon");
-				NativeImageBackedTexture tex = new NativeImageBackedTexture(image);
+				DynamicTexture tex = new DynamicTexture(image);
 				cacheModIcon(path, tex);
 				return tex;
 			}
@@ -49,16 +55,16 @@ public class FabricIconHandler implements Closeable {
 
 	@Override
 	public void close() {
-		for (NativeImageBackedTexture tex : modIconCache.values()) {
+		for (DynamicTexture tex : modIconCache.values()) {
 			tex.close();
 		}
 	}
 
-	NativeImageBackedTexture getCachedModIcon(Path path) {
+	DynamicTexture getCachedModIcon(Path path) {
 		return modIconCache.get(path);
 	}
 
-	void cacheModIcon(Path path, NativeImageBackedTexture tex) {
+	void cacheModIcon(Path path, DynamicTexture tex) {
 		modIconCache.put(path, tex);
 	}
 }

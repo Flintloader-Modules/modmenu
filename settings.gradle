@@ -1,8 +1,12 @@
 pluginManagement {
 	repositories {
 		maven {
-			name = 'Fabric'
-			url = 'https://maven.fabricmc.net/'
+			url = "https://maven.flintloader.net/releases"
+			name = "Flint Releases"
+		}
+		maven {
+			url = "https://maven.flintloader.net/mirror"
+			name = "Flint Mirror"
 		}
 		gradlePluginPortal()
 	}
@@ -12,4 +16,4 @@ if (JavaVersion.current().ordinal() + 1 < 17) {
 	throw new IllegalStateException("Please run gradle with Java 17+!")
 }
 
-rootProject.name = "modmenu"
+rootProject.name = "ModMenu"

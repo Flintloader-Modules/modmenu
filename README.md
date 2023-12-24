@@ -1,5 +1,7 @@
 ![Mod Menu](https://i.imgur.com/dMYWAjn.png)
 
+#### Forked from [ModMenu](https://github.com/TerraformersMC/ModMenu) to be made compatible with Flint Loader. This is not an official release, so do not bother the ModMenu authors
+
 Adds a screen for viewing a list of installed mods. 
 * The menu is searchable and sortable, libraries can be hidden. 
 * Client-side and API mods are marked with a special badge in the list.
@@ -7,10 +9,7 @@ Adds a screen for viewing a list of installed mods.
 * The mod details page also lets the user configure the mod, if available (can be disabled for modpacks via config).
 
 <h4 align="center">
-Mod Menu requires <a href="https://fabricmc.net/use/">Fabric Loader</a>
-</h4>
-<h4 align="center">
-Check out the <a href="https://discord.gg/jEGF5fb">Terraformers Discord Server</a> to chat about Mod Menu and other Fabric mods!
+Mod Menu requires <a href="https://flintloader.net">Flint Loader</a>
 </h4>
 <h4 align="center">
 Visit the <a href="https://github.com/TerraformersMC/ModMenu/wiki">Mod Menu Wiki</a> to learn more about the features

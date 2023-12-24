@@ -1,6 +1,5 @@
 package com.terraformersmc.modmenu;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
@@ -12,25 +11,21 @@ import com.terraformersmc.modmenu.config.ModMenuConfigManager;
 import com.terraformersmc.modmenu.event.ModMenuEventHandler;
 import com.terraformersmc.modmenu.util.ModrinthUtil;
 import com.terraformersmc.modmenu.util.mod.Mod;
-import com.terraformersmc.modmenu.util.mod.fabric.FabricDummyParentMod;
-import com.terraformersmc.modmenu.util.mod.fabric.FabricMod;
-import com.terraformersmc.modmenu.util.mod.quilt.QuiltMod;
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.api.ModContainer;
-import net.fabricmc.loader.api.metadata.ModMetadata;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.resource.language.I18n;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
+import net.flintloader.loader.api.FlintModule;
+import net.flintloader.loader.api.FlintModuleContainer;
+import net.flintloader.loader.modules.FlintModuleMetadata;
+import net.flintloader.loader.modules.ModuleList;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.NumberFormat;
 import java.util.*;
-import java.util.function.Supplier;
 
-public class ModMenu implements ClientModInitializer {
+public class ModMenu implements FlintModule {
 	public static final String MOD_ID = "modmenu";
 	public static final String GITHUB_REF = "TerraformersMC/ModMenu";
 	public static final Logger LOGGER = LoggerFactory.getLogger("Mod Menu");
@@ -64,32 +59,28 @@ public class ModMenu implements ClientModInitializer {
 	}
 
 	@Override
-	public void onInitializeClient() {
+	public void initializeModule() {
 		ModMenuConfigManager.initializeConfig();
 		Set<String> modpackMods = new HashSet<>();
-		FabricLoader.getInstance().getEntrypointContainers("modmenu", ModMenuApi.class).forEach(entrypoint -> {
-			ModMetadata metadata = entrypoint.getProvider().getMetadata();
+		/*FlintLoader.getEntryPointContainers("modmenu", ModMenuApi.class).forEach(entrypoint -> {
+			FlintModuleMetadata metadata = entrypoint.getProvider();
 			String modId = metadata.getId();
 			try {
-				ModMenuApi api = entrypoint.getEntrypoint();
+				ModMenuApi api = (ModMenuApi) entrypoint.getEntryPoint();
 				configScreenFactories.put(modId, api.getModConfigScreenFactory());
 				delayedScreenFactoryProviders.add(api.getProvidedConfigScreenFactories());
 				api.attachModpackBadges(modpackMods::add);
 			} catch (Throwable e) {
 				LOGGER.error("Mod {} provides a broken implementation of ModMenuApi", modId, e);
 			}
-		});
+		});*/
 
 		// Fill mods map
-		for (ModContainer modContainer : FabricLoader.getInstance().getAllMods()) {
-			if (!ModMenuConfig.HIDDEN_MODS.getValue().contains(modContainer.getMetadata().getId())) {
-				if (FabricLoader.getInstance().isModLoaded("quilt_loader")) {
-					QuiltMod mod = new QuiltMod(modContainer, modpackMods);
-					MODS.put(mod.getId(), mod);
-				} else {
-					FabricMod mod = new FabricMod(modContainer, modpackMods);
-					MODS.put(mod.getId(), mod);
-				}
+		for (FlintModuleContainer container : ModuleList.getInstance().allModules()) {
+			FlintModuleMetadata modContainer = container.getMetadata();
+			if (!ModMenuConfig.HIDDEN_MODS.getValue().contains(modContainer.getId())) {
+				com.terraformersmc.modmenu.util.mod.flint.FlintModule mod = new com.terraformersmc.modmenu.util.mod.flint.FlintModule(container);
+				MODS.put(mod.getId(), mod);
 			}
 		}
 
@@ -97,25 +88,6 @@ public class ModMenu implements ClientModInitializer {
 			ModrinthUtil.checkForUpdates();
 		}
 
-		Map<String, Mod> dummyParents = new HashMap<>();
-
-		// Initialize parent map
-		for (Mod mod : MODS.values()) {
-			String parentId = mod.getParent();
-			if (parentId != null) {
-				Mod parent = MODS.getOrDefault(parentId, dummyParents.get(parentId));
-				if (parent == null) {
-					if (mod instanceof FabricMod) {
-						parent = new FabricDummyParentMod((FabricMod) mod, parentId);
-						dummyParents.put(parentId, parent);
-					}
-				}
-				PARENT_MAP.put(parent, mod);
-			} else {
-				ROOT_MODS.put(mod.getId(), mod);
-			}
-		}
-		MODS.putAll(dummyParents);
 		ModMenuEventHandler.register();
 	}
 
@@ -135,23 +107,23 @@ public class ModMenu implements ClientModInitializer {
 		return NumberFormat.getInstance().format(cachedDisplayedModCount);
 	}
 
-	public static Text createModsButtonText(boolean title) {
+	public static Component createModsButtonText(boolean title) {
 		var titleStyle = ModMenuConfig.MODS_BUTTON_STYLE.getValue();
 		var gameMenuStyle = ModMenuConfig.GAME_MENU_BUTTON_STYLE.getValue();
 		var isIcon = title ? titleStyle == ModMenuConfig.TitleMenuButtonStyle.ICON : gameMenuStyle == ModMenuConfig.GameMenuButtonStyle.ICON;
 		var isShort = title ? titleStyle == ModMenuConfig.TitleMenuButtonStyle.SHRINK : gameMenuStyle == ModMenuConfig.GameMenuButtonStyle.REPLACE_BUGS;
-		MutableText modsText = Text.translatable("modmenu.title");
+		MutableComponent modsText = Component.translatable("modmenu.title");
 		if (ModMenuConfig.MOD_COUNT_LOCATION.getValue().isOnModsButton() && !isIcon) {
 			String count = ModMenu.getDisplayedModCount();
 			if (isShort) {
-				modsText.append(Text.literal(" ")).append(Text.translatable("modmenu.loaded.short", count));
+				modsText.append(Component.literal(" ")).append(Component.translatable("modmenu.loaded.short", count));
 			} else {
 				String specificKey = "modmenu.loaded." + count;
-				String key = I18n.hasTranslation(specificKey) ? specificKey : "modmenu.loaded";
-				if (ModMenuConfig.EASTER_EGGS.getValue() && I18n.hasTranslation(specificKey + ".secret")) {
+				String key = I18n.exists(specificKey) ? specificKey : "modmenu.loaded";
+				if (ModMenuConfig.EASTER_EGGS.getValue() && I18n.exists(specificKey + ".secret")) {
 					key = specificKey + ".secret";
 				}
-				modsText.append(Text.literal(" ")).append(Text.translatable(key, count));
+				modsText.append(Component.literal(" ")).append(Component.translatable(key, count));
 			}
 		}
 		return modsText;

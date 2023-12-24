@@ -6,7 +6,7 @@ import com.terraformersmc.modmenu.config.option.EnumConfigOption;
 import com.terraformersmc.modmenu.config.option.OptionConvertable;
 import com.terraformersmc.modmenu.config.option.StringSetConfigOption;
 import com.terraformersmc.modmenu.util.mod.Mod;
-import net.minecraft.client.option.SimpleOption;
+import net.minecraft.client.OptionInstance;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -45,8 +45,8 @@ public class ModMenuConfig {
 	public static final BooleanConfigOption BUTTON_UPDATE_BADGE = new BooleanConfigOption("button_update_badge", true);
 	public static final BooleanConfigOption QUICK_CONFIGURE = new BooleanConfigOption("quick_configure", true);
 
-	public static SimpleOption<?>[] asOptions() {
-		ArrayList<SimpleOption<?>> options = new ArrayList<>();
+	public static OptionInstance<?>[] asOptions() {
+		ArrayList<OptionInstance<?>> options = new ArrayList<>();
 		for (Field field : ModMenuConfig.class.getDeclaredFields()) {
 			if (Modifier.isStatic(field.getModifiers())
 					&& Modifier.isFinal(field.getModifiers())
@@ -64,7 +64,7 @@ public class ModMenuConfig {
 				}
 			}
 		}
-		return options.stream().toArray(SimpleOption[]::new);
+		return options.stream().toArray(OptionInstance[]::new);
 	}
 
 	public enum Sorting {

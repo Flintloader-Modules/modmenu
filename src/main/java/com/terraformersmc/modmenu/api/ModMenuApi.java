@@ -3,8 +3,8 @@ package com.terraformersmc.modmenu.api;
 import com.google.common.collect.ImmutableMap;
 import com.terraformersmc.modmenu.ModMenu;
 import com.terraformersmc.modmenu.gui.ModsScreen;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 
 import java.util.Map;
 import java.util.function.Consumer;
@@ -23,12 +23,12 @@ public interface ModMenuApi {
 	}
 
 	/**
-	 * Used for creating a {@link Text} just like what would appear
+	 * Used for creating a {@link Component} just like what would appear
 	 * on a Mod Menu Mods button
 	 *
 	 * @return The text that would be displayed on a Mods button
 	 */
-	static Text createModsButtonText() {
+	static Component createModsButtonText() {
 		return ModMenu.createModsButtonText(true);
 	}
 

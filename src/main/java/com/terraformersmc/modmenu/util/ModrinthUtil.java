@@ -7,12 +7,12 @@ import com.terraformersmc.modmenu.ModMenu;
 import com.terraformersmc.modmenu.config.ModMenuConfig;
 import com.terraformersmc.modmenu.util.mod.Mod;
 import com.terraformersmc.modmenu.util.mod.ModrinthData;
-import net.fabricmc.loader.api.FabricLoader;
+import net.flintloader.loader.modules.ModuleList;
 import net.minecraft.SharedConstants;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.toast.SystemToast;
-import net.minecraft.text.Text;
-import net.minecraft.util.Util;
+import net.minecraft.Util;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.toasts.SystemToast;
+import net.minecraft.network.chat.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +30,7 @@ public class ModrinthUtil {
 	private static boolean apiV2Deprecated = false;
 
 	public static void checkForUpdates() {
-		Util.getMainWorkerExecutor().execute(() -> {
+		Util.backgroundExecutor().execute(() -> {
 			LOGGER.info("Checking mod updates...");
 			Map<String, Set<Mod>> HASH_TO_MOD = new HashMap<>();
 			new ArrayList<>(ModMenu.MODS.values()).stream().filter(mod -> mod.allowsUpdateChecks() &&
@@ -50,9 +50,9 @@ public class ModrinthUtil {
 						}
 					});
 			String loader = ModMenu.runningQuilt ? "quilt" : "fabric";
-			String mcVer = SharedConstants.getGameVersion().getName();
-			String[] splitVersion = FabricLoader.getInstance().getModContainer(ModMenu.MOD_ID)
-					.get().getMetadata().getVersion().getFriendlyString().split("\\+", 1); // Strip build metadata for privacy
+			String mcVer = SharedConstants.getCurrentVersion().getName();
+			String[] splitVersion = ModuleList.getInstance().getModuleMeta(ModMenu.MOD_ID)
+				.getVersion().split("\\+", 1); // Strip build metadata for privacy
 			final var modMenuVersion = splitVersion.length > 1 ? splitVersion[1] : splitVersion[0];
 			final var userAgent = "%s/%s (%s/%s)".formatted(ModMenu.GITHUB_REF, modMenuVersion, mcVer, loader);
 			String body = ModMenu.GSON_MINIFIED.toJson(new LatestVersionsFromHashesBody(HASH_TO_MOD.keySet(), loader, mcVer));
@@ -101,13 +101,13 @@ public class ModrinthUtil {
 	}
 
 	public static void triggerV2DeprecatedToast() {
-		if (apiV2Deprecated && ModMenuConfig.UPDATE_CHECKER.getValue()) {
-			MinecraftClient.getInstance().getToastManager().add(new SystemToast(
-					SystemToast.Type.PERIODIC_NOTIFICATION,
-					Text.translatable("modmenu.modrinth.v2_deprecated.title"),
-					Text.translatable("modmenu.modrinth.v2_deprecated.description")
+		/*if (apiV2Deprecated && ModMenuConfig.UPDATE_CHECKER.getValue()) {
+			Minecraft.getInstance().getToasts().addToast(new SystemToast(
+					SystemToast.SystemToastIds.PERIODIC_NOTIFICATION,
+					Component.translatable("modmenu.modrinth.v2_deprecated.title"),
+				Component.translatable("modmenu.modrinth.v2_deprecated.description")
 			));
-		}
+		}*/
 	}
 
 	public static class LatestVersionsFromHashesBody {

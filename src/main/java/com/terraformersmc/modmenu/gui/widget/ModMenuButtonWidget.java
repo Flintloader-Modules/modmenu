@@ -3,23 +3,22 @@ package com.terraformersmc.modmenu.gui.widget;
 import com.terraformersmc.modmenu.ModMenu;
 import com.terraformersmc.modmenu.config.ModMenuConfig;
 import com.terraformersmc.modmenu.gui.ModsScreen;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 
-public class ModMenuButtonWidget extends ButtonWidget {
-	public ModMenuButtonWidget(int x, int y, int width, int height, Text text, Screen screen) {
-		super(x, y, width, height, text, button -> MinecraftClient.getInstance().setScreen(new ModsScreen(screen)), ButtonWidget.DEFAULT_NARRATION_SUPPLIER);
+public class ModMenuButtonWidget extends Button {
+	public ModMenuButtonWidget(int x, int y, int width, int height, Component text, Screen screen) {
+		super(x, y, width, height, text, button -> Minecraft.getInstance().setScreen(new ModsScreen(screen)), Button.DEFAULT_NARRATION);
 	}
 
 	@Override
-	public void render(DrawContext DrawContext, int mouseX, int mouseY, float delta) {
-		super.render(DrawContext, mouseX, mouseY, delta);
+	protected void renderWidget(GuiGraphics guiGraphics, int i, int j, float f) {
+		super.renderWidget(guiGraphics, i, j, f);
 		if (ModMenuConfig.BUTTON_UPDATE_BADGE.getValue() && ModMenu.modUpdateAvailable) {
-			UpdateAvailableBadge.renderBadge(DrawContext, this.width + this.getX() - 16, this.height / 2 + this.getY() - 4);
+			UpdateAvailableBadge.renderBadge(guiGraphics, this.width + this.getX() - 16, this.height / 2 + this.getY() - 4);
 		}
 	}
 }
