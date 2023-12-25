@@ -11,6 +11,7 @@ import com.terraformersmc.modmenu.config.ModMenuConfigManager;
 import com.terraformersmc.modmenu.event.ModMenuEventHandler;
 import com.terraformersmc.modmenu.util.ModrinthUtil;
 import com.terraformersmc.modmenu.util.mod.Mod;
+import net.flintloader.loader.FlintLoader;
 import net.flintloader.loader.api.FlintModule;
 import net.flintloader.loader.api.FlintModuleContainer;
 import net.flintloader.loader.modules.FlintModuleMetadata;
@@ -62,7 +63,7 @@ public class ModMenu implements FlintModule {
 	public void initializeModule() {
 		ModMenuConfigManager.initializeConfig();
 		Set<String> modpackMods = new HashSet<>();
-		/*FlintLoader.getEntryPointContainers("modmenu", ModMenuApi.class).forEach(entrypoint -> {
+		FlintLoader.getEntryPointContainers("modmenu", ModMenuApi.class).forEach(entrypoint -> {
 			FlintModuleMetadata metadata = entrypoint.getProvider();
 			String modId = metadata.getId();
 			try {
@@ -73,7 +74,7 @@ public class ModMenu implements FlintModule {
 			} catch (Throwable e) {
 				LOGGER.error("Mod {} provides a broken implementation of ModMenuApi", modId, e);
 			}
-		});*/
+		});
 
 		// Fill mods map
 		for (FlintModuleContainer container : ModuleList.getInstance().allModules()) {

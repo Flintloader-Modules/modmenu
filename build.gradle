@@ -1,5 +1,17 @@
 plugins {
 	id 'flint-steel' version '0.1.1'
+	id 'maven-publish'
+}
+
+var versionBase = "1.0"
+
+group = "net.flintloader.modules"
+version = "${versionBase}"
+
+def ENV = System.getenv()
+if (ENV.BUILD_NUMBER) {
+	var build = (ENV.BUILD_NUMBER.toInteger() - 1)
+	version = "${versionBase}.${build}"
 }
 
 repositories {
@@ -17,6 +29,27 @@ repositories {
 dependencies {
 	minecraft "com.mojang:minecraft:$project.minecraft_version"
 	mappings steel.officialMojangMappings()
-	modImplementation "net.flintloader:punch:0.0.4"
-	modImplementation "net.flintloader:flint-api:1.20.4-0.0.0"
+	modImplementation "net.flintloader:punch:0.0.5"
+	modImplementation "net.flintloader:flint-api:1.20.4-0.0.1"
+}
+
+publishing {
+	publications {
+		mavenJava(MavenPublication) {
+			groupId project.group
+			artifactId project.archivesBaseName
+			version project.version
+			artifact remapJar
+		}
+	}
+
+	repositories {
+		maven {
+			url System.getenv("MAVEN_URL")
+			credentials {
+				username System.getenv("MAVEN_USER")
+				password System.getenv("MAVEN_PASS")
+			}
+		}
+	}
 }
