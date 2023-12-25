@@ -53,3 +53,11 @@ publishing {
 		}
 	}
 }
+
+processResources {
+	inputs.property "version", project.version
+
+	filesMatching("flintmodule.json") {
+		expand "version": project.version
+	}
+}
