@@ -28,9 +28,9 @@ repositories {
 
 dependencies {
 	minecraft "com.mojang:minecraft:$project.minecraft_version"
-	mappings steel.officialMojangMappings()
+	mappings "net.fabricmc:yarn:$project.yarn_mappings:v2"
 	modImplementation "net.flintloader:punch:0.0.5"
-	modImplementation "net.flintloader:flint-api:1.20.4-0.0.1"
+	modImplementation "net.flintloader:flint-api:1.20.4-0.0.3"
 }
 
 publishing {

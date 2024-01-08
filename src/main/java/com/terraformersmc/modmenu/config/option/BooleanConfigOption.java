@@ -1,23 +1,23 @@
 package com.terraformersmc.modmenu.config.option;
 
 import com.terraformersmc.modmenu.util.TranslationUtil;
-import net.minecraft.client.OptionInstance;
-import net.minecraft.network.chat.CommonComponents;
-import net.minecraft.network.chat.Component;
+import net.minecraft.client.option.SimpleOption;
+import net.minecraft.screen.ScreenTexts;
+import net.minecraft.text.Text;
 
 public class BooleanConfigOption implements OptionConvertable {
 	private final String key, translationKey;
 	private final boolean defaultValue;
-	private final Component enabledText;
-	private final Component disabledText;
+	private final Text enabledText;
+	private final Text disabledText;
 
 	public BooleanConfigOption(String key, boolean defaultValue, String enabledKey, String disabledKey) {
 		ConfigOptionStorage.setBoolean(key, defaultValue);
 		this.key = key;
 		this.translationKey = TranslationUtil.translationKeyOf("option", key);
 		this.defaultValue = defaultValue;
-		this.enabledText = Component.translatable(translationKey + "." + enabledKey);
-		this.disabledText = Component.translatable(translationKey + "." + disabledKey);
+		this.enabledText = Text.translatable(translationKey + "." + enabledKey);
+		this.disabledText = Text.translatable(translationKey + "." + disabledKey);
 	}
 
 	public BooleanConfigOption(String key, boolean defaultValue) {
@@ -44,17 +44,17 @@ public class BooleanConfigOption implements OptionConvertable {
 		return defaultValue;
 	}
 
-	public Component getButtonText() {
-		return CommonComponents.optionNameValue(Component.translatable(translationKey), getValue() ? enabledText : disabledText);
+	public Text getButtonText() {
+		return ScreenTexts.composeGenericOptionText(Text.translatable(translationKey), getValue() ? enabledText : disabledText);
 	}
 
 	@Override
-	public OptionInstance<Boolean> asOption() {
+	public SimpleOption<Boolean> asOption() {
 		if (enabledText != null && disabledText != null) {
-			return new OptionInstance<>(translationKey, OptionInstance.noTooltip(),
-					(text, value) -> value ? enabledText : disabledText, OptionInstance.BOOLEAN_VALUES, getValue(),
+			return new SimpleOption<>(translationKey, SimpleOption.emptyTooltip(),
+					(text, value) -> value ? enabledText : disabledText, SimpleOption.BOOLEAN, getValue(),
 					newValue -> ConfigOptionStorage.setBoolean(key, newValue));
 		}
-		return OptionInstance.createBoolean(translationKey, getValue(), (value) -> ConfigOptionStorage.setBoolean(key, value));
+		return SimpleOption.ofBoolean(translationKey, getValue(), (value) -> ConfigOptionStorage.setBoolean(key, value));
 	}
 }

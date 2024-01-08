@@ -1,22 +1,22 @@
 package com.terraformersmc.modmenu.gui.widget;
 
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.ImageButton;
-import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.gui.widget.TexturedButtonWidget;
+import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 
-public class LegacyTexturedButtonWidget extends ImageButton {
+public class LegacyTexturedButtonWidget extends TexturedButtonWidget {
 	private final int u;
 	private final int v;
 	private final int hoveredVOffset;
 
-	private final ResourceLocation texture;
+	private final Identifier texture;
 
 	private final int textureWidth;
 	private final int textureHeight;
 
-	public LegacyTexturedButtonWidget(int x, int y, int width, int height, int u, int v, int hoveredVOffset, ResourceLocation texture, int textureWidth, int textureHeight, Button.OnPress pressAction, Component message) {
+	public LegacyTexturedButtonWidget(int x, int y, int width, int height, int u, int v, int hoveredVOffset, Identifier texture, int textureWidth, int textureHeight, ButtonWidget.PressAction pressAction, Text message) {
 		super(x, y, width, height, null, pressAction, message);
 
 		this.u = u;
@@ -30,25 +30,25 @@ public class LegacyTexturedButtonWidget extends ImageButton {
 	}
 
 	@Override
-	public void renderWidget(GuiGraphics context, int mouseX, int mouseY, float delta) {
+	public void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
 		int v = this.v;
 
-		if (!this.isActive()) {
+		if (!this.isNarratable()) {
 			v += this.hoveredVOffset * 2;
-		} else if (this.isHoveredOrFocused()) {
+		} else if (this.isSelected()) {
 			v += this.hoveredVOffset;
 		}
 
-		context.blit(this.texture, this.getX(), this.getY(), this.u, v, this.width, this.height, this.textureWidth, this.textureHeight);
+		context.drawTexture(this.texture, this.getX(), this.getY(), this.u, v, this.width, this.height, this.textureWidth, this.textureHeight);
 	}
 
-	public static Builder legacyTexturedBuilder(Component message, Button.OnPress onPress) {
+	public static Builder legacyTexturedBuilder(Text message, ButtonWidget.PressAction onPress) {
 		return new Builder(message, onPress);
 	}
 
 	public static class Builder {
-		private final Component message;
-		private final Button.OnPress onPress;
+		private final Text message;
+		private final ButtonWidget.PressAction onPress;
 
 		private int x;
 		private int y;
@@ -60,12 +60,12 @@ public class LegacyTexturedButtonWidget extends ImageButton {
 		private int v;
 		private int hoveredVOffset;
 
-		private ResourceLocation texture;
+		private Identifier texture;
 
 		private int textureWidth;
 		private int textureHeight;
 
-		public Builder(Component message, OnPress onPress) {
+		public Builder(Text message, PressAction onPress) {
 			this.message = message;
 			this.onPress = onPress;
 		}
@@ -93,7 +93,7 @@ public class LegacyTexturedButtonWidget extends ImageButton {
 			return this;
 		}
 
-		public Builder texture(ResourceLocation texture, int textureWidth, int textureHeight) {
+		public Builder texture(Identifier texture, int textureWidth, int textureHeight) {
 			this.texture = texture;
 
 			this.textureWidth = textureWidth;

@@ -7,12 +7,12 @@ import com.terraformersmc.modmenu.ModMenu;
 import com.terraformersmc.modmenu.config.ModMenuConfig;
 import com.terraformersmc.modmenu.util.mod.Mod;
 import com.terraformersmc.modmenu.util.mod.ModrinthData;
-import net.flintloader.loader.modules.ModuleList;
+import net.flintloader.loader.FlintLoader;
 import net.minecraft.SharedConstants;
-import net.minecraft.Util;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.toasts.SystemToast;
-import net.minecraft.network.chat.Component;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.toast.SystemToast;
+import net.minecraft.text.Text;
+import net.minecraft.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,33 +29,45 @@ public class ModrinthUtil {
 	private static final HttpClient client = HttpClient.newHttpClient();
 	private static boolean apiV2Deprecated = false;
 
+	private static boolean allowsUpdateChecks(Mod mod) {
+		return mod.allowsUpdateChecks();
+	}
+
 	public static void checkForUpdates() {
-		Util.backgroundExecutor().execute(() -> {
+		if (apiV2Deprecated || !ModMenuConfig.UPDATE_CHECKER.getValue()) {
+			return;
+		}
+
+		Util.getMainWorkerExecutor().execute(() -> {
 			LOGGER.info("Checking mod updates...");
-			Map<String, Set<Mod>> HASH_TO_MOD = new HashMap<>();
-			new ArrayList<>(ModMenu.MODS.values()).stream().filter(mod -> mod.allowsUpdateChecks() &&
-							ModMenuConfig.UPDATE_CHECKER.getValue() &&
-							!ModMenuConfig.DISABLE_UPDATE_CHECKER.getValue().contains(mod.getId()) &&
-							!apiV2Deprecated)
-					.forEach(mod -> {
-						try {
-							String hash = mod.getSha512Hash();
-							if (hash != null) {
-								LOGGER.debug("Hash for {} is {}", mod.getId(), hash);
-								HASH_TO_MOD.putIfAbsent(hash, new HashSet<>());
-								HASH_TO_MOD.get(hash).add(mod);
-							}
-						} catch (IOException e) {
-							LOGGER.error("Error checking for updates: ", e);
-						}
-					});
-			String loader = ModMenu.runningQuilt ? "quilt" : "fabric";
-			String mcVer = SharedConstants.getCurrentVersion().getName();
-			String[] splitVersion = ModuleList.getInstance().getModuleMeta(ModMenu.MOD_ID)
-				.getVersion().split("\\+", 1); // Strip build metadata for privacy
+
+			Map<String, Set<Mod>> modHashes = new HashMap<>();
+			new ArrayList<>(ModMenu.MODS.values()).stream().filter(ModrinthUtil::allowsUpdateChecks).forEach(mod -> {
+				String modId = mod.getId();
+
+				try {
+					String hash = mod.getSha512Hash();
+
+					if (hash != null) {
+						LOGGER.debug("Hash for {} is {}", modId, hash);
+						modHashes.putIfAbsent(hash, new HashSet<>());
+						modHashes.get(hash).add(mod);
+					}
+				} catch (IOException e) {
+					LOGGER.error("Error getting mod hash for mod {}: ", modId, e);
+				}
+			});
+
+			String environment = ModMenu.devEnvironment ? "/development": "";
+			String primaryLoader = "fabric";
+			List<String> loaders = List.of("fabric");
+
+			String mcVer = SharedConstants.getGameVersion().getName();
+			String[] splitVersion = FlintLoader.getModuleMetadata(ModMenu.MOD_ID)
+					.get().getVersion().split("\\+", 1); // Strip build metadata for privacy
 			final var modMenuVersion = splitVersion.length > 1 ? splitVersion[1] : splitVersion[0];
-			final var userAgent = "%s/%s (%s/%s)".formatted(ModMenu.GITHUB_REF, modMenuVersion, mcVer, loader);
-			String body = ModMenu.GSON_MINIFIED.toJson(new LatestVersionsFromHashesBody(HASH_TO_MOD.keySet(), loader, mcVer));
+			final var userAgent = "%s/%s (%s/%s%s)".formatted(ModMenu.GITHUB_REF, modMenuVersion, mcVer, primaryLoader, environment);
+			String body = ModMenu.GSON_MINIFIED.toJson(new LatestVersionsFromHashesBody(modHashes.keySet(), loaders, mcVer));
 			LOGGER.debug("User agent: " + userAgent);
 			LOGGER.debug("Body: " + body);
 			var latestVersionsRequest = HttpRequest.newBuilder()
@@ -81,15 +93,20 @@ public class ModrinthUtil {
 						var projectId = versionObj.get("project_id").getAsString();
 						var versionNumber = versionObj.get("version_number").getAsString();
 						var versionId = versionObj.get("id").getAsString();
-						var versionHash = versionObj.get("files").getAsJsonArray().asList()
-								.stream().filter(file -> file.getAsJsonObject().get("primary").getAsBoolean()).findFirst()
-								.get().getAsJsonObject().get("hashes").getAsJsonObject().get("sha512").getAsString();
+						var primaryFile = versionObj.get("files").getAsJsonArray().asList().stream()
+								.filter(file -> file.getAsJsonObject().get("primary").getAsBoolean()).findFirst();
+
+						if (primaryFile.isEmpty()) {
+							return;
+						}
+
+						var versionHash = primaryFile.get().getAsJsonObject().get("hashes").getAsJsonObject().get("sha512").getAsString();
+
 						if (!Objects.equals(versionHash, lookupHash)) {
 							// hashes different, there's an update.
-							HASH_TO_MOD.get(lookupHash).forEach(mod -> {
+							modHashes.get(lookupHash).forEach(mod -> {
 								LOGGER.info("Update available for '{}@{}', (-> {})", mod.getId(), mod.getVersion(), versionNumber);
 								mod.setModrinthData(new ModrinthData(projectId, versionId, versionNumber));
-								ModMenu.modUpdateAvailable = true;
 							});
 						}
 					});
@@ -101,13 +118,13 @@ public class ModrinthUtil {
 	}
 
 	public static void triggerV2DeprecatedToast() {
-		/*if (apiV2Deprecated && ModMenuConfig.UPDATE_CHECKER.getValue()) {
-			Minecraft.getInstance().getToasts().addToast(new SystemToast(
-					SystemToast.SystemToastIds.PERIODIC_NOTIFICATION,
-					Component.translatable("modmenu.modrinth.v2_deprecated.title"),
-				Component.translatable("modmenu.modrinth.v2_deprecated.description")
+		if (apiV2Deprecated && ModMenuConfig.UPDATE_CHECKER.getValue()) {
+			MinecraftClient.getInstance().getToastManager().add(new SystemToast(
+					SystemToast.Type.PERIODIC_NOTIFICATION,
+					Text.translatable("modmenu.modrinth.v2_deprecated.title"),
+					Text.translatable("modmenu.modrinth.v2_deprecated.description")
 			));
-		}*/
+		}
 	}
 
 	public static class LatestVersionsFromHashesBody {
@@ -117,9 +134,9 @@ public class ModrinthUtil {
 		@SerializedName("game_versions")
 		public Collection<String> gameVersions;
 
-		public LatestVersionsFromHashesBody(Collection<String> hashes, String loader, String mcVersion) {
+		public LatestVersionsFromHashesBody(Collection<String> hashes, Collection<String> loaders, String mcVersion) {
 			this.hashes = hashes;
-			this.loaders = Set.of(loader);
+			this.loaders = loaders;
 			this.gameVersions = Set.of(mcVersion);
 		}
 	}

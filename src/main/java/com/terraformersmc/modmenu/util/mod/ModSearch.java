@@ -1,8 +1,10 @@
 package com.terraformersmc.modmenu.util.mod;
 
 import com.terraformersmc.modmenu.ModMenu;
+import com.terraformersmc.modmenu.config.ModMenuConfig;
 import com.terraformersmc.modmenu.gui.ModsScreen;
-import net.minecraft.client.resources.language.I18n;
+import net.minecraft.client.resource.language.I18n;
+import net.minecraft.util.Pair;
 
 import java.util.List;
 import java.util.Locale;
@@ -19,11 +21,14 @@ public class ModSearch {
 			return candidates;
 		}
 		return candidates.stream()
-				.filter(modContainer -> passesFilters(screen, modContainer, query.toLowerCase(Locale.ROOT)))
+				.map(modContainer -> new Pair<>(modContainer, passesFilters(screen, modContainer, query.toLowerCase(Locale.ROOT))))
+				.filter(pair -> pair.getRight() > 0)
+				.sorted((a, b) -> b.getRight() - a.getRight())
+				.map(Pair::getLeft)
 				.collect(Collectors.toList());
 	}
 
-	private static boolean passesFilters(ModsScreen screen, Mod mod, String query) {
+	private static int passesFilters(ModsScreen screen, Mod mod, String query) {
 		String modId = mod.getId();
 		String modName = mod.getName();
 		String modTranslatedName = mod.getTranslatedName();
@@ -31,18 +36,28 @@ public class ModSearch {
 		String modTranslatedDescription = mod.getTranslatedDescription();
 		String modSummary = mod.getSummary();
 
-		String library = I18n.get("modmenu.searchTerms.library");
-		String patchwork = I18n.get("modmenu.searchTerms.patchwork");
-		String modpack = I18n.get("modmenu.searchTerms.modpack");
-		String deprecated = I18n.get("modmenu.searchTerms.deprecated");
-		String clientside = I18n.get("modmenu.searchTerms.clientside");
-		String configurable = I18n.get("modmenu.searchTerms.configurable");
+		String library = I18n.translate("modmenu.searchTerms.library");
+		String patchwork = I18n.translate("modmenu.searchTerms.patchwork");
+		String modpack = I18n.translate("modmenu.searchTerms.modpack");
+		String deprecated = I18n.translate("modmenu.searchTerms.deprecated");
+		String clientside = I18n.translate("modmenu.searchTerms.clientside");
+		String configurable = I18n.translate("modmenu.searchTerms.configurable");
+		String hasUpdate = I18n.translate("modmenu.searchTerms.hasUpdate");
+
+		// Libraries are currently hidden, ignore them entirely
+		if (mod.isHidden() || !ModMenuConfig.SHOW_LIBRARIES.getValue() && mod.getBadges().contains(Mod.Badge.LIBRARY)) {
+			return 0;
+		}
 
 		// Some basic search, could do with something more advanced but this will do for now
 		if (modName.toLowerCase(Locale.ROOT).contains(query) // Search default mod name
 				|| modTranslatedName.toLowerCase(Locale.ROOT).contains(query) // Search localized mod name
 				|| modId.toLowerCase(Locale.ROOT).contains(query) // Search mod ID
-				|| modDescription.toLowerCase(Locale.ROOT).contains(query) // Search default mod description
+		) {
+			return query.length() >= 3 ? 2 : 1;
+		}
+
+		if (modDescription.toLowerCase(Locale.ROOT).contains(query) // Search default mod description
 				|| modTranslatedDescription.toLowerCase(Locale.ROOT).contains(query) // Search localized mod description
 				|| modSummary.toLowerCase(Locale.ROOT).contains(query) // Search mod summary
 				|| authorMatches(mod, query) // Search via author
@@ -52,19 +67,22 @@ public class ModSearch {
 				|| deprecated.contains(query) && mod.getBadges().contains(Mod.Badge.DEPRECATED) // Search for deprecated mods
 				|| clientside.contains(query) && mod.getBadges().contains(Mod.Badge.CLIENT) // Search for clientside mods
 				|| configurable.contains(query) && screen.getModHasConfigScreen().get(modId) // Search for mods that can be configured
+				|| hasUpdate.contains(query) && mod.getModrinthData() != null // Search for mods that have updates
 		) {
-			return true;
+			return 1;
 		}
 
 		// Allow parent to pass filter if a child passes
 		if (ModMenu.PARENT_MAP.keySet().contains(mod)) {
 			for (Mod child : ModMenu.PARENT_MAP.get(mod)) {
-				if (passesFilters(screen, child, query)) {
-					return true;
+				int result = passesFilters(screen, child, query);
+
+				if (result > 0) {
+					return result;
 				}
 			}
 		}
-		return false;
+		return 0;
 	}
 
 	private static boolean authorMatches(Mod mod, String query) {

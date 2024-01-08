@@ -4,7 +4,7 @@ import com.terraformersmc.modmenu.util.mod.Mod;
 import com.terraformersmc.modmenu.util.mod.ModrinthData;
 import com.terraformersmc.modmenu.util.mod.fabric.FabricIconHandler;
 import net.flintloader.loader.api.FlintModuleContainer;
-import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.client.texture.NativeImageBackedTexture;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -35,7 +35,7 @@ public class FlintModule implements Mod {
 	}
 
 	@Override
-	public @NotNull DynamicTexture getIcon(FabricIconHandler iconHandler, int i) {
+	public @NotNull NativeImageBackedTexture getIcon(FabricIconHandler iconHandler, int i) {
 		return iconHandler.createIcon(metadata, metadata.getMetadata().getIcon());
 	}
 
@@ -151,6 +151,11 @@ public class FlintModule implements Mod {
 
 	@Override
 	public boolean getChildHasUpdate() {
+		return false;
+	}
+
+	@Override
+	public boolean isHidden() {
 		return false;
 	}
 }
